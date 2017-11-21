@@ -34,6 +34,8 @@ Build the binary with:
 
     ./apache2metric --metric-name=reqcount --sampling-interval=5s /path/to/logfile1 /path/to/logfile2
 
+The program supports reading regular log files and compressed log files (`.gz`, `.bz2`, and `.tar.gz`).
+
 The program assumes that request log files (and their content) are ordered in
 increasing order of time. It produces output (following the `LINE FORMAT` above) on
 `stdout`.

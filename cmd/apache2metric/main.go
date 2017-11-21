@@ -1,7 +1,10 @@
 package main
 
 import (
+	"archive/tar"
 	"bufio"
+	"compress/bzip2"
+	"compress/gzip"
 	"flag"
 	"fmt"
 	"io"
@@ -64,6 +67,29 @@ func extractRequestTime(line string) (*time.Time, error) {
 
 }
 
+// openFile returns a io.Reader that reads a given file. Supports reading
+// compressed files with file endings '.gz', '.bz2', and '.tar.gz'.
+func openFile(path string) (io.Reader, error) {
+	var reader io.ReadCloser
+	reader, err := os.Open(path)
+	switch {
+	case strings.HasSuffix(path, "tar.gz"):
+		reader, err = gzip.NewReader(reader)
+		if err != nil {
+			return reader, err
+		}
+		return tar.NewReader(reader), nil
+
+	case strings.HasSuffix(path, "gz"):
+		return gzip.NewReader(reader)
+
+	case strings.HasSuffix(path, "bz2"):
+		return bzip2.NewReader(reader), nil
+
+	}
+	return reader, err
+}
+
 func main() {
 	flag.Parse()
 
@@ -79,12 +105,11 @@ func main() {
 	logFilePaths := flag.Args()[0:]
 	logFileReaders := []io.Reader{}
 	for _, logFilePath := range logFilePaths {
-		logFile, err := os.Open(logFilePath)
+		logFileReader, err := openFile(logFilePath)
 		if err != nil {
 			dieWithError("error: %s", err)
 		}
-		defer logFile.Close()
-		logFileReaders = append(logFileReaders, logFile)
+		logFileReaders = append(logFileReaders, logFileReader)
 	}
 	multiReader := io.MultiReader(logFileReaders...)
 
