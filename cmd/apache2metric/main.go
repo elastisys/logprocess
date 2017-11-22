@@ -117,8 +117,8 @@ func main() {
 	defer writer.Flush()
 	scanner := bufio.NewScanner(multiReader)
 	// request count so far
-	reqCount := 0
-	lineno := 1
+	var reqCount uint64
+	var lineno uint64 = 1
 	// tracks when the last request count observation was made
 	var lastSampleTime *time.Time
 
